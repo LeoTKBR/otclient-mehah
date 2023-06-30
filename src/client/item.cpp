@@ -310,7 +310,7 @@ void Item::unserializeItem(const BinaryTreePtr& in)
             switch (attrib) {
                 case ATTR_COUNT:
                 case ATTR_RUNE_CHARGES:
-                    setCount(in->getU8());
+                    setCount(in->getU16());
                     break;
                 case ATTR_CHARGES:
                     setCount(in->getU16());
@@ -371,7 +371,7 @@ void Item::serializeItem(const OutputBinaryTreePtr& out)
     out->addU16(getServerId());
 
     out->addU8(ATTR_COUNT);
-    out->addU8(getCount());
+    out->addU16(getCount());
 
     out->addU8(ATTR_CHARGES);
     out->addU16(getCountOrSubType());

@@ -320,7 +320,7 @@ void ProtocolGame::sendInspectNpcTrade(int itemId, int count)
     const auto& msg = std::make_shared<OutputMessage>();
     msg->addU8(Proto::ClientInspectNpcTrade);
     msg->addU16(itemId);
-    msg->addU8(count);
+    msg->addU16(count);
     send(msg);
 }
 
@@ -329,11 +329,11 @@ void ProtocolGame::sendBuyItem(int itemId, int subType, int amount, bool ignoreC
     const auto& msg = std::make_shared<OutputMessage>();
     msg->addU8(Proto::ClientBuyItem);
     msg->addU16(itemId);
-    msg->addU8(subType);
+    msg->addU16(subType);
     if (g_game.getFeature(Otc::GameDoubleShopSellAmount))
         msg->addU16(amount);
     else
-        msg->addU8(amount);
+        msg->addU16(amount);
     msg->addU8(ignoreCapacity ? 0x01 : 0x00);
     msg->addU8(buyWithBackpack ? 0x01 : 0x00);
     send(msg);
@@ -344,11 +344,11 @@ void ProtocolGame::sendSellItem(int itemId, int subType, int amount, bool ignore
     const auto& msg = std::make_shared<OutputMessage>();
     msg->addU8(Proto::ClientSellItem);
     msg->addU16(itemId);
-    msg->addU8(subType);
+    msg->addU16(subType);
     if (g_game.getFeature(Otc::GameDoubleShopSellAmount))
         msg->addU16(amount);
     else
-        msg->addU8(amount);
+        msg->addU16(amount);
     msg->addU8(ignoreEquipped ? 0x01 : 0x00);
     send(msg);
 }
