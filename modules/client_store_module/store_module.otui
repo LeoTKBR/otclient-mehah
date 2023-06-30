@@ -1,0 +1,309 @@
+StoreButton < UIButton
+  font: verdana-11px-antialised
+  text-offset: 42 0
+  text-align: left
+  background-color: alpha
+  height: 36
+  icon-rect: 5 0 32 32
+  $focus: 
+    background-color: #00000077
+    color: #ffffff
+
+  $hover focus:
+    background-color: #00000077
+    color: #ffffff
+
+  $hover !focus:
+    background-color: #00000044
+    color: #ffffff
+
+  $hover !checked:
+    background-color: #00000044
+    color: #ffffff
+
+  $disabled:
+    background-color: alpha
+    color: #ffffff22
+
+  $checked:
+    background-color: #00000077
+    color: #ffffff
+
+  $on !checked:
+    background-color: #00000077
+    color: #ffffff
+
+ProductButton < UIButton
+  font: verdana-11px-antialised
+  text-align: left
+  background-color: #00000022
+  size: 96 114
+  border: 1 #039be5
+  margin-right: 2
+  margin-bottom: 2
+  $hover:
+    border: 1 #ffba00
+    background-color: #00000077
+
+  Label
+    id: productLabelTitle
+    text-align: center
+    text-offset: 0 0
+    anchors.top: parent.top
+    anchors.right: parent.right
+    anchors.left: parent.left
+    margin: 3
+    border: 1 #039be5
+    height: 16
+    font: terminus-10px
+    background-color: #00000077
+
+  Label
+    id: productLabelImage
+    anchors.top: productLabelTitle.bottom
+    anchors.right: parent.right
+    anchors.left: parent.left
+    margin: 3
+    border: 1 #039be5
+    size: 88 70
+
+  Label
+    id: productLabelTokenPrice
+    anchors.bottom: parent.bottom
+    anchors.right: parent.right
+    anchors.left: parent.left
+    text-align: center
+    text-offset: 0 0
+    margin: 3
+    border: 1 #039be5
+    height: 16
+    font: terminus-10px
+    background-color: #00000077
+
+  Label
+    id: coinIcon
+    image-source: /images/shop/tibiaCoin
+    anchors.top: productLabelTokenPrice.top
+    anchors.left: parent.left
+    margin-left: 5
+    margin-top: 2
+    size: 12 12
+    opacity: 1.0
+
+ButtonShop < UIButton
+  font: verdana-11px-antialised
+  color: #dfdfdfff
+  size: 92 22
+  text-offset: 0 0
+  image-source: /images/shop/buttonShop
+  image-color: #dfdfdf
+  image-clip: 0 0 24 22
+  image-border: 7
+  padding: 5 10 5 10
+  opacity: 1.0
+
+  $hover !disabled:
+    image-clip: 0 22 24 22
+
+  $pressed:
+    image-clip: 0 44 24 22
+
+  $disabled:
+    color: #dfdfdf88
+    opacity: 0.8
+
+MainWindow
+  id: storeWindow
+  size: 700 486
+  padding: 3
+  border: 1 #039be5
+  image-color: #00000000
+  background-color: #00000066
+
+  @onEnter: modules.store_module.onCloseStore()
+  @onEscape: modules.store_module.onCloseStore()
+
+  Label
+    id: title
+    !text: tr('Store')
+    text-align: center
+    font: verdana-11px-antialised
+    anchors.top: parent.top
+    anchors.left: parent.left
+    anchors.right: parent.right
+    background-color: #00000077
+    border: 1 #039be5
+    height: 20
+  
+  Panel
+    id: balanceInfo
+    anchors.top: title.bottom
+    anchors.left: parent.left
+    margin-top: 3
+    size: 185 54
+    border: 1 #039be5
+    background-color: #00000077
+    padding: 5
+    align: center
+
+    Label
+      id: textYbalance
+      !text: tr('Your current balance:')
+      font: terminus-10px
+      text-align: center
+      anchors.top: parent.top
+      anchors.left: parent.left
+      anchors.right: parent.right
+
+    Label
+      id: coinBalance
+      font: terminus-10px
+      anchors.top: textYbalance.bottom
+      anchors.left: parent.left
+      height: 12
+      margin-top: 8
+
+    Label
+      id: coinIcon
+      image-source: /images/shop/tibiaCoin
+      anchors.top: coinBalance.top
+      anchors.left: coinBalance.right
+      margin-left: 3
+      size: 12 12
+
+  ButtonShop
+    id: getCoins
+    !text: tr('Get ')
+    tooltip: Get Tibia Coins
+    text-offset: -7 0
+    color: #ffffff
+    width: 92
+    anchors.top: balanceInfo.bottom
+    anchors.left: parent.left
+    icon-rect: 54 5 12 12
+    icon-source: /images/shop/tibiaCoin
+    margin-top: 3
+    @onClick: modules.store_module.getCoins()
+
+  ButtonShop
+    id: transferPoints
+    anchors.top: getCoins.top
+    tooltip: Transfer Coins
+    anchors.right: balanceInfo.right
+    icon-rect: 31 4 32 14
+    icon-source: /images/shop/iconTransfer
+    width: 92
+    @onClick: modules.store_module.transferPoints()
+
+  Panel
+    id: indexDescription
+    size: 507 78
+    border: 1 #039be5
+    background-color: #00000077
+    anchors.top: balanceInfo.top
+    anchors.left: balanceInfo.right
+    margin-left: 3
+
+    Label
+      id: imageDesc
+      anchors.top: parent.top
+      anchors.left: parent.left
+      size: 64 64
+      margin-top: 7
+      margin-left: 10
+
+    Label
+      id: titleDesc
+      font: verdana-11px-antialised
+      anchors.top: imageDesc.top
+      anchors.left: imageDesc.right
+      width: 300
+      margin-left: 10
+      margin-top: 12
+      text-wrap: true
+      text-auto-resize:true
+
+    Label
+      id: description
+      font: terminus-10px
+      text-wrap: true
+      text-auto-resize:true
+      anchors.top: titleDesc.bottom
+      anchors.left: imageDesc.right
+      anchors.right: parent.right
+      anchors.bottom: parent.bottom
+      margin-left: 10
+      margin-top: 5
+
+  Label
+    id: categories
+    !text: tr('Categories:')
+    anchors.top: getCoins.bottom
+    anchors.left: parent.left
+    font: terminus-10px
+    size: 185 12
+    margin-top: 3
+    margin-left: 5
+
+  TextList
+    id: indexList
+    anchors.top: categories.bottom
+    anchors.left: parent.left
+    size: 185 334
+    background-color: #00000077
+    border: 1 #039be5
+    margin-top: 3
+
+  Label
+    id: products
+    !text: tr('Products:')
+    anchors.top: categories.top
+    anchors.left: indexList.right
+    font: terminus-10px
+    size: 185 12
+    margin-left: 5
+
+  ScrollablePanel
+    id: productList
+    anchors.top: products.bottom
+    anchors.left: indexList.right
+    size: 507 334
+    border: 1 #039be5
+    padding: 3
+    padding-right: 10
+    background-color: #00000077
+    margin-top: 3
+    margin-left: 3
+    vertical-scrollbar: productListScrollbar
+    layout:
+      type: grid
+      flow: true
+      cell-size: 96 114
+
+  VerticalScrollBar
+    id: productListScrollbar
+    height: 332
+    margin-top: 1
+    margin-right: 1
+    anchors.top: productList.top
+    anchors.right: productList.right
+    step: 14
+    pixels-scroll: true
+
+  Label
+    background-color: #00000077
+    border: 1 #039be5
+    height: 28
+    anchors.bottom: parent.bottom
+    anchors.left: parent.left
+    anchors.right: parent.right
+
+  ButtonShop
+    id: closeButton
+    anchors.horizontalCenter: parent.horizontalCenter
+    anchors.bottom: parent.bottom
+    margin-bottom: 3
+    !text: tr('Close')
+    width: 50
+    color: #ffffff
+    @onClick: modules.store_module.toggle()

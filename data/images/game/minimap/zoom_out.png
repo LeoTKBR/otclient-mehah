@@ -1,0 +1,26 @@
+/**
+ * Types extracted from https://discord.com/developers/docs/resources/user
+ */
+import type { APIGuildIntegration } from './guild';
+/**
+ * https://discord.com/developers/docs/resources/user#user-object
+ * @deprecated API and Gateway v6 are deprecated and the types will not receive further updates, please update to v8.
+ */
+export interface APIUser {
+    id: string;
+    username: string;
+    discriminator: string;
+    avatar: string | null;
+    bot?: boolean;
+    system?: boolean;
+    mfa_enabled?: boolean;
+    locale?: string;
+    verified?: boolean;
+    email?: string | null;
+    flags?: UserFlags;
+    premium_type?: UserPremiumType;
+    public_flags?: UserFlags;
+}
+/**
+ * https://discord.com/developers/docs/resources/user#user-object-user-flags
+ * @deprecated API and Gateway v6 are deprecated and the type

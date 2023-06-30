@@ -1,0 +1,162 @@
+import * as _discordjs_util from '@discordjs/util';
+import { Awaitable } from '@discordjs/util';
+import { GatewayDispatchPayload, GatewayReadyDispatchData, GatewaySendPayload, GatewayOpcodes, GatewayIntentBits, GatewayIdentifyProperties, GatewayPresenceUpdateData, APIGatewayBotInfo } from 'discord-api-types/v10';
+import * as _discordjs_collection from '@discordjs/collection';
+import { Collection } from '@discordjs/collection';
+import { AsyncEventEmitter } from '@vladfrangu/async_event_emitter';
+import { REST } from '@discordjs/rest';
+import { AsyncQueue } from '@sapphire/async-queue';
+
+declare enum WebSocketShardEvents {
+    Closed = "closed",
+    Debug = "debug",
+    Dispatch = "dispatch",
+    Error = "error",
+    HeartbeatComplete = "heartbeat",
+    Hello = "hello",
+    Ready = "ready",
+    Resumed = "resumed"
+}
+declare enum WebSocketShardStatus {
+    Idle = 0,
+    Connecting = 1,
+    Resuming = 2,
+    Ready = 3
+}
+declare enum WebSocketShardDestroyRecovery {
+    Reconnect = 0,
+    Resume = 1
+}
+type WebSocketShardEventsMap = {
+    [WebSocketShardEvents.Closed]: [{
+        code: number;
+    }];
+    [WebSocketShardEvents.Debug]: [payload: {
+        message: string;
+    }];
+    [WebSocketShardEvents.Dispatch]: [payload: {
+        data: GatewayDispatchPayload;
+    }];
+    [WebSocketShardEvents.Error]: [payload: {
+        error: Error;
+    }];
+    [WebSocketShardEvents.Hello]: [];
+    [WebSocketShardEvents.Ready]: [payload: {
+        data: GatewayReadyDispatchData;
+    }];
+    [WebSocketShardEvents.Resumed]: [];
+    [WebSocketShardEvents.HeartbeatComplete]: [payload: {
+        ackAt: number;
+        heartbeatAt: number;
+        latency: number;
+    }];
+};
+interface WebSocketShardDestroyOptions {
+    code?: number;
+    reason?: string;
+    recover?: WebSocketShardDestroyRecovery;
+}
+declare enum CloseCodes {
+    Normal = 1000,
+    Resuming = 4200
+}
+interface SendRateLimitState {
+    remaining: number;
+    resetAt: number;
+}
+declare class WebSocketShard extends AsyncEventEmitter<WebSocketShardEventsMap> {
+    #private;
+    private connection;
+    private useIdentifyCompress;
+    private inflate;
+    private readonly textDecoder;
+    private replayedEvents;
+    private isAck;
+    private sendRateLimitState;
+    private initialHeartbeatTimeoutController;
+    private heartbeatInterval;
+    private lastHeartbeatAt;
+    private initialConnectResolved;
+    private failedToConnectDueToNetworkError;
+    private readonly sendQueue;
+    private readonly timeoutAbortControllers;
+    private readonly strategy;
+    readonly id: number;
+    get status(): WebSocketShardStatus;
+    constructor(strategy: IContextFetchingStrategy, id: number);
+    connect(): Promise<void>;
+    private internalConnect;
+    destroy(options?: WebSocketShardDestroyOptions): Promise<void>;
+    private waitForEvent;
+    send(payload: GatewaySendPayload): Promise<void>;
+    private identify;
+    private resume;
+    private heartbeat;
+    private unpackMessage;
+    private onMessage;
+    private onError;
+    private onClose;
+    private debug;
+}
+
+/**
+ * Strategies responsible for spawning, initializing connections, destroying shards, and relaying events
+ */
+interface IShardingStrategy {
+    /**
+     * Initializes all the shards
+     */
+    connect(): Awaitable<void>;
+    /**
+     * Destroys all the shards
+     */
+    destroy(options?: Omit<WebSocketShardDestroyOptions, 'recover'>): Awaitable<void>;
+    /**
+     * Fetches the status of all the shards
+     */
+    fetchStatus(): Awaitable<Collection<number, WebSocketShardStatus>>;
+    /**
+     * Sends a payload to a shard
+     */
+    send(shardId: number, payload: GatewaySendPayload): Awaitable<void>;
+    /**
+     * Spawns all the shards
+     */
+    spawn(shardIds: number[]): Awaitable<void>;
+}
+
+/**
+ * IdentifyThrottlers are responsible for dictating when a shard is allowed to identify.
+ *
+ * @see {@link https://discord.com/developers/docs/topics/gateway#sharding-max-concurrency}
+ */
+interface IIdentifyThrottler {
+    /**
+     * Resolves once the given shard should be allowed to identify, or rejects if the operation was aborted.
+     */
+    waitForIdentify(shardId: number, signal: AbortSignal): Promise<void>;
+}
+
+/**
+ * Simple strategy that just spawns shards in the current process
+ */
+declare class SimpleShardingStrategy implements IShardingStrategy {
+    private readonly manager;
+    private readonly shards;
+    constructor(manager: WebSocketManager);
+    /**
+     * {@inheritDoc IShardingStrategy.spawn}
+     */
+    spawn(shardIds: number[]): Promise<void>;
+    /**
+     * {@inheritDoc IShardingStrategy.connect}
+     */
+    connect(): Promise<void>;
+    /**
+     * {@inheritDoc IShardingStrategy.destroy}
+     */
+    destroy(options?: Omit<WebSocketShardDestroyOptions, 'recover'>): Promise<void>;
+    /**
+     * {@inheritDoc IShardingStrategy.send}
+     */
+    send(shardId: number, payload: GatewaySendPayload): Promise<v

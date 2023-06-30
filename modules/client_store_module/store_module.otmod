@@ -1,0 +1,10 @@
+Module
+  name: store_module
+  description: Premium shop
+  author: Margoh
+  sandboxed: true
+  scripts: [configs, store_module]
+  autoload: true
+  autoload-priority: 1001
+  @onLoad: init()
+  @onUnload: terminate()
