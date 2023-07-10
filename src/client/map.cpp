@@ -620,7 +620,7 @@ bool Map::isCovered(const Position& pos, uint8_t firstFloor)
         }
 
         if (const auto& tile = getTile(tilePos.translated(1, 1))) {
-            if (tile->isTopGround())
+            if (tile->hasTopGround())
                 return true;
         }
     }
@@ -640,7 +640,7 @@ bool Map::isCompletelyCovered(const Position& pos, uint8_t firstFloor)
         for (int_fast8_t x = -1; ++x < 2 && !done;) {
             for (int_fast8_t y = -1; ++y < 2 && !done;) {
                 const auto& tile = getTile(tilePos.translated(x, x));
-                if (!tile || !tile->isTopGround()) {
+                if (!tile || !tile->hasTopGround()) {
                     covered = false;
                     done = true;
                 } else if (x == 1 && y == 1 && (!checkTile || checkTile->isSingleDimension())) {
@@ -706,10 +706,10 @@ void Map::setAwareRange(const AwareRange& range)
 
 void Map::resetAwareRange() {
     setAwareRange({
-        static_cast<uint8_t>(g_gameConfig.getMapViewPort().width()) ,
-        static_cast<uint8_t>(g_gameConfig.getMapViewPort().height()),
-        static_cast<uint8_t>(g_gameConfig.getMapViewPort().width() + 1),
-        static_cast<uint8_t>(g_gameConfig.getMapViewPort().height() + 1)
+        15,
+        15,
+        16,
+        16
     });
 }
 

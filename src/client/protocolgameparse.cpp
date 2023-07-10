@@ -1,6 +1,6 @@
 /*
 * Copyright (c) 2010-2022 OTClient <https://github.com/edubart/otclient>
-*
+* 
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
 * in the Software without restriction, including without limitation the rights
@@ -1188,7 +1188,7 @@ void ProtocolGame::parseOpenNpcTrade(const InputMessagePtr& msg)
 
     for (int_fast32_t i = -1; ++i < listCount;) {
         const uint16_t itemId = msg->getU16();
-        const uint8_t count = msg->getU8();
+        const uint16_t count = msg->getU16();
 
         const auto& item = Item::create(itemId);
         item->setCountOrSubType(count);
@@ -1226,7 +1226,7 @@ void ProtocolGame::parsePlayerGoods(const InputMessagePtr& msg) const
         if (g_game.getFeature(Otc::GameDoubleShopSellAmount))
             amount = msg->getU16();
         else
-            amount = msg->getU8();
+            amount = msg->getU16();
 
         goods.emplace_back(Item::create(itemId), amount);
     }
@@ -2875,7 +2875,7 @@ ItemPtr ProtocolGame::getItem(const InputMessagePtr& msg, int id)
     }
 
     if (item->isStackable() || item->isFluidContainer() || item->isSplash() || item->isChargeable()) {
-        item->setCountOrSubType(msg->getU8());
+        item->setCountOrSubType(msg->getU16());
     }
 
     if (item->isContainer()) {

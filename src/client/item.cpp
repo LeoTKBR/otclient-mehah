@@ -45,22 +45,21 @@ ItemPtr Item::create(int id)
     return item;
 }
 
-void Item::draw(const Point& dest, uint32_t flags, const Color& c, LightView* lightView)
+void Item::draw(const Point& dest, bool drawThings, LightView* lightView)
 {
     if (!canDraw(m_color) || isHided())
         return;
 
     // determine animation phase
     const int animationPhase = calculateAnimationPhase();
-    const auto& color = c == Color::white ? m_color : c;
 
-    internalDraw(animationPhase, dest, color, false, flags, lightView);
+    internalDraw(animationPhase, dest, m_color, drawThings, false, lightView);
 
     if (isMarked())
-        internalDraw(animationPhase, dest, getMarkedColor(), true, flags);
+        internalDraw(animationPhase, dest, getMarkedColor(), drawThings, true);
 }
 
-void Item::internalDraw(int animationPhase, const Point& dest, const Color& color, bool isMarked, uint32_t flags, LightView* lightView)
+void Item::internalDraw(int animationPhase, const Point& dest, const Color& color, bool drawThings, bool isMarked, LightView* lightView)
 {
     if (isMarked)
         g_drawPool.setShaderProgram(g_painter->getReplaceColorShader(), true);
@@ -69,7 +68,7 @@ void Item::internalDraw(int animationPhase, const Point& dest, const Color& colo
         if (m_shader)
             g_drawPool.setShaderProgram(m_shader, true, m_shaderAction);
     }
-    getThingType()->draw(dest, 0, m_numPatternX, m_numPatternY, m_numPatternZ, animationPhase, flags, color, lightView, m_drawConductor);
+    getThingType()->draw(dest, 0, m_numPatternX, m_numPatternY, m_numPatternZ, animationPhase, color, drawThings, lightView, m_drawConductor);
     if (!isMarked)
         drawAttachedEffect(dest, lightView, true); // On Top
 }
@@ -97,9 +96,8 @@ int Item::getSubType()
 {
     if (isSplash() || isFluidContainer())
         return m_countOrSubType;
-    if (g_game.getClientVersion() > 862)
-        return 0;
-    return 1;
+
+    return g_game.getClientVersion() > 862 ? 0 : 1;
 }
 
 ItemPtr Item::clone()
@@ -310,7 +308,7 @@ void Item::unserializeItem(const BinaryTreePtr& in)
             switch (attrib) {
                 case ATTR_COUNT:
                 case ATTR_RUNE_CHARGES:
-                    setCount(in->getU8());
+                    setCount(in->getU16());
                     break;
                 case ATTR_CHARGES:
                     setCount(in->getU16());
@@ -371,7 +369,7 @@ void Item::serializeItem(const OutputBinaryTreePtr& out)
     out->addU16(getServerId());
 
     out->addU8(ATTR_COUNT);
-    out->addU8(getCount());
+    out->addU16(getCount());
 
     out->addU8(ATTR_CHARGES);
     out->addU16(getCountOrSubType());

@@ -61,12 +61,12 @@ Creature::Creature() :m_type(Proto::CreatureTypeUnknown)
     */
 }
 
-void Creature::draw(const Point& dest, uint32_t flags, LightView* lightView)
+void Creature::draw(const Point& dest, bool drawThings, LightView* lightView)
 {
     if (!canBeSeen() || !canDraw())
         return;
 
-    if (flags & Otc::DrawThings) {
+    if (drawThings) {
         if (m_showTimedSquare) {
             g_drawPool.addBoundingRect(Rect(dest + (m_walkOffset - getDisplacement() + 2) * g_drawPool.getScaleFactor(), Size(28 * g_drawPool.getScaleFactor())), m_timedSquareColor, std::max<int>(static_cast<int>(2 * g_drawPool.getScaleFactor()), 1));
         }
@@ -77,13 +77,13 @@ void Creature::draw(const Point& dest, uint32_t flags, LightView* lightView)
 
         const auto& _dest = dest + m_walkOffset * g_drawPool.getScaleFactor();
 
-        internalDraw(_dest, false, Color::white, lightView);
+        internalDraw(_dest, lightView);
 
         if (isMarked())
-            internalDraw(_dest, true, getMarkedColor());
+            internalDraw(_dest, nullptr, getMarkedColor());
     }
 
-    if (lightView && flags & Otc::DrawLights) {
+    if (lightView) {
         auto light = getLight();
 
         if (isLocalPlayer() && (g_map.getLight().intensity < 64 || m_position.z > g_gameConfig.getMapSeaFloor())) {
@@ -100,91 +100,7 @@ void Creature::draw(const Point& dest, uint32_t flags, LightView* lightView)
     }
 }
 
-void Creature::internalDraw(Point dest, bool isMarked, const Color& color, LightView* lightView)
-{
-    if (isMarked)
-        g_drawPool.setShaderProgram(g_painter->getReplaceColorShader());
-    else
-        drawAttachedEffect(dest, lightView, false); // On Bottom
-
-    if (!isHided()) {
-        // outfit is a real creature
-        if (m_outfit.isCreature()) {
-            if (m_outfit.hasMount()) {
-                dest -= m_mountType->getDisplacement() * g_drawPool.getScaleFactor();
-
-                if (!isMarked && m_mountShader)
-                    g_drawPool.setShaderProgram(m_mountShader, true, m_mountShaderAction);
-                m_mountType->draw(dest, 0, m_numPatternX, 0, 0, getCurrentAnimationPhase(true), Otc::DrawThingsAndLights, color);
-
-                dest += getDisplacement() * g_drawPool.getScaleFactor();
-            }
-
-            if (!m_jumpOffset.isNull()) {
-                const auto& jumpOffset = m_jumpOffset * g_drawPool.getScaleFactor();
-                dest -= Point(std::round(jumpOffset.x), std::round(jumpOffset.y));
-            }
-
-            const auto& datType = getThingType();
-            const int animationPhase = getCurrentAnimationPhase();
-
-            if (!isMarked && m_shader)
-                g_drawPool.setShaderProgram(m_shader, m_shaderAction);
-
-            // yPattern => creature addon
-            for (int yPattern = 0; yPattern < getNumPatternY(); ++yPattern) {
-                // continue if we dont have this addon
-                if (yPattern > 0 && !(m_outfit.getAddons() & (1 << (yPattern - 1))))
-                    continue;
-
-                datType->draw(dest, 0, m_numPatternX, yPattern, m_numPatternZ, animationPhase, Otc::DrawThingsAndLights, color);
-
-                if (m_drawOutfitColor && !isMarked && getLayers() > 1) {
-                    g_drawPool.setCompositionMode(CompositionMode::MULTIPLY);
-                    datType->draw(dest, SpriteMaskYellow, m_numPatternX, yPattern, m_numPatternZ, animationPhase, Otc::DrawThingsAndLights, m_outfit.getHeadColor());
-                    datType->draw(dest, SpriteMaskRed, m_numPatternX, yPattern, m_numPatternZ, animationPhase, Otc::DrawThingsAndLights, m_outfit.getBodyColor());
-                    datType->draw(dest, SpriteMaskGreen, m_numPatternX, yPattern, m_numPatternZ, animationPhase, Otc::DrawThingsAndLights, m_outfit.getLegsColor());
-                    datType->draw(dest, SpriteMaskBlue, m_numPatternX, yPattern, m_numPatternZ, animationPhase, Otc::DrawThingsAndLights, m_outfit.getFeetColor());
-                    g_drawPool.resetCompositionMode();
-                }
-            }
-
-            if (!isMarked && m_shader)
-                g_drawPool.resetShaderProgram();
-
-            // outfit is a creature imitating an item or the invisible effect
-        } else {
-            int animationPhases = m_thingType->getAnimationPhases();
-            int animateTicks = g_gameConfig.getItemTicksPerFrame();
-
-            // when creature is an effect we cant render the first and last animation phase,
-            // instead we should loop in the phases between
-            if (m_outfit.isEffect()) {
-                animationPhases = std::max<int>(1, animationPhases - 2);
-                animateTicks = g_gameConfig.getInvisibleTicksPerFrame();
-            }
-
-            int animationPhase = 0;
-            if (animationPhases > 1) {
-                animationPhase = (g_clock.millis() % (static_cast<long long>(animateTicks) * animationPhases)) / animateTicks;
-            }
-
-            if (m_outfit.isEffect())
-                animationPhase = std::min<int>(animationPhase + 1, animationPhases);
-
-            if (!isMarked && m_shader)
-                g_drawPool.setShaderProgram(m_shader, true, m_shaderAction);
-            m_thingType->draw(dest - (getDisplacement() * g_drawPool.getScaleFactor()), 0, 0, 0, 0, animationPhase, Otc::DrawThingsAndLights, color);
-        }
-    }
-
-    if (isMarked)
-        g_drawPool.resetShaderProgram();
-    else
-        drawAttachedEffect(dest, lightView, true); // On Top
-}
-
-void Creature::drawOutfit(const Rect& destRect, uint8_t size, const Color& color)
+void Creature::draw(const Rect& destRect, uint8_t size)
 {
     if (!m_thingType)
         return;
@@ -193,9 +109,12 @@ void Creature::drawOutfit(const Rect& destRect, uint8_t size, const Color& color
     if (size > 0)
         frameSize = std::max<int>(frameSize * (size / 100.f), 2 * g_gameConfig.getSpriteSize() * (size / 100.f));
 
-    g_drawPool.bindFrameBuffer(frameSize);
-    internalDraw(Point(frameSize - g_gameConfig.getSpriteSize()) + getDisplacement(), false, color);
-    g_drawPool.releaseFrameBuffer(destRect);
+    g_drawPool.bindFrameBuffer(frameSize); {
+        const auto& p = Point(frameSize - g_gameConfig.getSpriteSize()) + getDisplacement();
+        internalDraw(p);
+        if (isMarked())
+            internalDraw(p, nullptr, getMarkedColor());
+    } g_drawPool.releaseFrameBuffer(destRect);
 }
 
 void Creature::drawInformation(const MapPosInfo& mapRect, const Point& dest, bool useGray, int drawFlags)
@@ -302,6 +221,92 @@ void Creature::drawInformation(const MapPosInfo& mapRect, const Point& dest, boo
     }
     // Go back to use map pool
     g_drawPool.select(DrawPoolType::MAP);
+}
+
+void Creature::internalDraw(Point dest, LightView* lightView, const Color& color)
+{
+    bool isMarked = color != Color::white;
+
+    if (isMarked)
+        g_drawPool.setShaderProgram(g_painter->getReplaceColorShader());
+    else
+        drawAttachedEffect(dest, lightView, false); // On Bottom
+
+    if (!isHided()) {
+        // outfit is a real creature
+        if (m_outfit.isCreature()) {
+            if (m_outfit.hasMount()) {
+                dest -= m_mountType->getDisplacement() * g_drawPool.getScaleFactor();
+
+                if (!isMarked && m_mountShader)
+                    g_drawPool.setShaderProgram(m_mountShader, true, m_mountShaderAction);
+                m_mountType->draw(dest, 0, m_numPatternX, 0, 0, getCurrentAnimationPhase(true), color);
+
+                dest += getDisplacement() * g_drawPool.getScaleFactor();
+            }
+
+            if (!m_jumpOffset.isNull()) {
+                const auto& jumpOffset = m_jumpOffset * g_drawPool.getScaleFactor();
+                dest -= Point(std::round(jumpOffset.x), std::round(jumpOffset.y));
+            }
+
+            const auto& datType = getThingType();
+            const int animationPhase = getCurrentAnimationPhase();
+
+            if (!isMarked && m_shader)
+                g_drawPool.setShaderProgram(m_shader, m_shaderAction);
+
+            // yPattern => creature addon
+            for (int yPattern = 0; yPattern < getNumPatternY(); ++yPattern) {
+                // continue if we dont have this addon
+                if (yPattern > 0 && !(m_outfit.getAddons() & (1 << (yPattern - 1))))
+                    continue;
+
+                datType->draw(dest, 0, m_numPatternX, yPattern, m_numPatternZ, animationPhase, color);
+
+                if (m_drawOutfitColor && !isMarked && getLayers() > 1) {
+                    g_drawPool.setCompositionMode(CompositionMode::MULTIPLY);
+                    datType->draw(dest, SpriteMaskYellow, m_numPatternX, yPattern, m_numPatternZ, animationPhase, m_outfit.getHeadColor());
+                    datType->draw(dest, SpriteMaskRed, m_numPatternX, yPattern, m_numPatternZ, animationPhase, m_outfit.getBodyColor());
+                    datType->draw(dest, SpriteMaskGreen, m_numPatternX, yPattern, m_numPatternZ, animationPhase, m_outfit.getLegsColor());
+                    datType->draw(dest, SpriteMaskBlue, m_numPatternX, yPattern, m_numPatternZ, animationPhase, m_outfit.getFeetColor());
+                    g_drawPool.resetCompositionMode();
+                }
+            }
+
+            if (!isMarked && m_shader)
+                g_drawPool.resetShaderProgram();
+
+            // outfit is a creature imitating an item or the invisible effect
+        } else {
+            int animationPhases = m_thingType->getAnimationPhases();
+            int animateTicks = g_gameConfig.getItemTicksPerFrame();
+
+            // when creature is an effect we cant render the first and last animation phase,
+            // instead we should loop in the phases between
+            if (m_outfit.isEffect()) {
+                animationPhases = std::max<int>(1, animationPhases - 2);
+                animateTicks = g_gameConfig.getInvisibleTicksPerFrame();
+            }
+
+            int animationPhase = 0;
+            if (animationPhases > 1) {
+                animationPhase = (g_clock.millis() % (static_cast<long long>(animateTicks) * animationPhases)) / animateTicks;
+            }
+
+            if (m_outfit.isEffect())
+                animationPhase = std::min<int>(animationPhase + 1, animationPhases);
+
+            if (!isMarked && m_shader)
+                g_drawPool.setShaderProgram(m_shader, true, m_shaderAction);
+            m_thingType->draw(dest - (getDisplacement() * g_drawPool.getScaleFactor()), 0, 0, 0, 0, animationPhase, color);
+        }
+    }
+
+    if (isMarked)
+        g_drawPool.resetShaderProgram();
+    else
+        drawAttachedEffect(dest, lightView, true); // On Top
 }
 
 void Creature::turn(Otc::Direction direction)
@@ -594,16 +599,22 @@ void Creature::updateWalk(const bool isPreWalking)
     const float walkTicksPerPixel = getStepDuration(true) / static_cast<float>(g_gameConfig.getSpriteSize());
 
     const int totalPixelsWalked = std::min<int>(m_walkTimer.ticksElapsed() / walkTicksPerPixel, g_gameConfig.getSpriteSize());
-
     // needed for paralyze effect
     m_walkedPixels = std::max<int>(m_walkedPixels, totalPixelsWalked);
-
     updateWalkAnimation();
     updateWalkOffset(m_walkedPixels);
     updateWalkingTile();
 
-    if (!isPreWalking && m_walkedPixels == g_gameConfig.getSpriteSize()) {
-        terminateWalk();
+    if (m_walkedPixels == g_gameConfig.getSpriteSize()) {
+        if (!isPreWalking)
+            terminateWalk();
+
+        const auto self = static_self_cast<Creature>();
+        m_walkFinishAnimEvent = g_dispatcher.scheduleEvent([self] {
+            self->m_walkAnimationPhase = 0;
+            self->m_walkFinishAnimEvent = nullptr;
+            self->terminateWalk();
+        }, g_game.getServerBeat());
     }
 }
 
@@ -620,21 +631,13 @@ void Creature::terminateWalk()
         setDirection(m_walkTurnDirection);
         m_walkTurnDirection = Otc::InvalidDirection;
     }
-
     if (m_walkingTile) {
         m_walkingTile->removeWalkingCreature(static_self_cast<Creature>());
         m_walkingTile = nullptr;
     }
-
     m_walkedPixels = 0;
     m_walkOffset = {};
     m_walking = false;
-
-    const auto self = static_self_cast<Creature>();
-    m_walkFinishAnimEvent = g_dispatcher.scheduleEvent([self] {
-        self->m_walkAnimationPhase = 0;
-        self->m_walkFinishAnimEvent = nullptr;
-    }, g_game.getServerBeat());
 }
 
 void Creature::setHealthPercent(uint8_t healthPercent)
@@ -825,7 +828,7 @@ uint16_t Creature::getStepDuration(bool ignoreDiagonal, Otc::Direction dir)
         m_stepCache.speed = m_speed;
         m_stepCache.groundSpeed = groundSpeed;
 
-        uint32_t stepDuration = 1000 * groundSpeed;
+        uint32_t stepDuration = 1015 * groundSpeed;
         if (hasSpeedFormula()) {
             stepDuration /= m_calculatedStepSpeed;
         } else stepDuration /= m_speed;
@@ -835,9 +838,9 @@ uint16_t Creature::getStepDuration(bool ignoreDiagonal, Otc::Direction dir)
             stepDuration = ((stepDuration + serverBeat - 1) / serverBeat) * serverBeat;
         }
 
-        m_stepCache.duration = stepDuration + 10;
+        m_stepCache.duration = stepDuration + 15;
         m_stepCache.walkDuration = std::min<int>(stepDuration / g_gameConfig.getSpriteSize(), DrawPool::FPS60);
-        m_stepCache.diagonalDuration = stepDuration * (g_game.getClientVersion() > 810 || g_gameConfig.isForcingNewWalkingFormula() ? 3 : 2);
+        m_stepCache.diagonalDuration = stepDuration * (g_game.getClientVersion() > 810 || g_gameConfig.isForcingNewWalkingFormula() ? 2 : 2);
     }
 
     return ignoreDiagonal ? m_stepCache.duration : m_stepCache.getDuration(m_lastStepDirection);

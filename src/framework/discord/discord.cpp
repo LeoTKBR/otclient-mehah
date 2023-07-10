@@ -45,17 +45,17 @@ void Discord::update()
     std::string info;
     if (g_game.isOnline()) {
 #if SHOW_CHARACTER_NAME_RPC == 1
-        info = "Name: " + g_game.getCharacterName();
+        info = "Nome: " + g_game.getCharacterName();
 #endif
 
 #if SHOW_CHARACTER_LEVEL_RPC == 1
         const auto& level = std::to_string(g_game.getLocalPlayer()->getLevel());
-        info += info.empty() ? "Level: " + level : "[" + level + "]";
+        info += info.empty() ? "Nível: " + level : " - " + level + "";
 #endif
 
 #if SHOW_CHARACTER_WORLD_RPC == 1
         if (!info.empty()) info += "\n";
-        info += "World: " + g_game.getWorldName();
+        info += "Mundo: " + g_game.getWorldName();
 #endif
     } else {
         info = std::string{ OFFLINE_RPC_TEXT };
