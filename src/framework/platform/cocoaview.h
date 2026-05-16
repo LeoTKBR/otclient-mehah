@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2026 OTClient <https://github.com/edubart/otclient>
+ * Copyright (c) 2010-2025 OTClient <https://github.com/edubart/otclient>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,11 +22,36 @@
 
 #pragma once
 
-#include <cstddef>
+#ifdef __OBJC__
+#define Point MacPoint
+#define Size MacSize
+#define Rect MacRect
 
-#include <BS_thread_pool.hpp>
-#include <memory>
+#ifndef GL_SILENCE_DEPRECATION
+#define GL_SILENCE_DEPRECATION
+#endif
+#import <Cocoa/Cocoa.h>
+#import <AppKit/AppKit.h>
 
-using AsyncDispatcher = decltype(BS::thread_pool{ std::size_t{} });
+#undef Point
+#undef Size
+#undef Rect
 
-extern std::unique_ptr<AsyncDispatcher> g_asyncDispatcher;
+#ifdef __cplusplus
+class CocoaWindow;
+#else
+typedef void CocoaWindow;
+#endif
+
+@interface OTOpenGLView : NSOpenGLView
+@property (nonatomic, assign) CocoaWindow* platformWindow;
+@property (nonatomic) BOOL acceptsInput;
+@property (nonatomic) CGFloat scrollAccumX;
+@property (nonatomic) CGFloat scrollAccumY;
+@end
+
+@interface OTWindowDelegate : NSObject <NSWindowDelegate>
+@property (nonatomic, assign) CocoaWindow* platformWindow;
+@end
+
+#endif
