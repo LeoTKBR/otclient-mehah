@@ -54,5 +54,7 @@ Module
     - game_rewardwall
     - game_forge
     - game_inspect
+    - game_wheel
+
   @onLoad: init()
   @onUnload: terminate()
