@@ -777,7 +777,7 @@ function createThingMenu(menuPosition, lookThing, useThing, creatureThing)
                 shortcut = nil
             end
             if creatureThing:getPosition().z == localPosition.z then
-                if creatureThing:isNpc() and g_game.getClientVersion() < 1511 then
+                if creatureThing:isNpc() then
                     menu:addOption(tr('Talk'), function()
                         g_game.talk("hi")
                     end)
@@ -963,8 +963,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
 
     -- Classic controls: right-click on NPC says "hi"
     if creatureThing and creatureThing:isNpc() and mouseButton == MouseRightButton and 
-    keyboardModifiers == KeyboardNoModifier and 
-    g_game.getClientVersion() < 1511 then
+    keyboardModifiers == KeyboardNoModifier then
         -- In classic controls, always allow NPC interaction
         -- In non-classic controls, check the talkOnRightClick option
         if classicControls or modules.client_options.getOption('talkOnRightClick') then
@@ -1048,7 +1047,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
             local player = g_game.getLocalPlayer()
 
             -- Handle NPCs first - they should not be attacked
-            if creatureThing and creatureThing:isNpc() and g_game.getClientVersion() < 1511 then
+            if creatureThing and creatureThing:isNpc() then
                 local playerPos = player:getPosition()
                 local npcPos = creatureThing:getPosition()
                 if playerPos.z == npcPos.z then
@@ -1226,7 +1225,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
             -- Right click with no modifiers: main loot functionality
             if mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier then
                 -- Handle NPCs first - they should not be attacked
-                if creatureThing and creatureThing:isNpc() and g_game.getClientVersion() < 1511 then
+                if creatureThing and creatureThing:isNpc() then
                     local playerPos = player:getPosition()
                     local npcPos = creatureThing:getPosition()
                     if playerPos.z == npcPos.z then
@@ -1311,7 +1310,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
             -- Right click with no modifiers: use or open containers
             if mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier then
                 -- Handle NPCs first - they should not be attacked
-                if creatureThing and creatureThing:isNpc() and g_game.getClientVersion() < 1511 then
+                if creatureThing and creatureThing:isNpc() then
                     local playerPos = player:getPosition()
                     local npcPos = creatureThing:getPosition()
                     if playerPos.z == npcPos.z then
@@ -1400,7 +1399,7 @@ function processMouseAction(menuPosition, mouseButton, autoWalkPos, lookThing, u
             -- Right click for Loot: Left mode - use items instead of showing context menu
             if mouseButton == MouseRightButton and keyboardModifiers == KeyboardNoModifier then
                 -- Handle NPCs first - they should not be attacked
-                if creatureThing and creatureThing:isNpc() and g_game.getClientVersion() < 1511 then
+                if creatureThing and creatureThing:isNpc() then
                     local playerPos = player:getPosition()
                     local npcPos = creatureThing:getPosition()
                     if playerPos.z == npcPos.z then

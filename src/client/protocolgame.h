@@ -155,7 +155,11 @@ public:
     void sendStashWithdraw(uint16_t itemId, uint32_t count, uint8_t stackpos);
     void sendStashStow(const Position& position, const uint16_t itemId, const uint32_t count, const uint8_t stackpos, const uint8_t action);
     void sendHighscoreInfo(uint8_t action, uint8_t category, uint32_t vocation, std::string_view world, uint8_t worldType, uint8_t battlEye, uint16_t page, uint8_t totalPages);
+    void sendTaskBoardAction(const uint8_t option, const uint16_t value = 0, const uint16_t extraValue = 0);
     void sendImbuementDurations(bool isOpen = false);
+    void sendStartOfflineTraining(const uint8_t skillType);
+    void sendTutorialChangeVocation(uint8_t vocationClientId);
+    void sendSoulSealsAction(const uint16_t raceId);
     void sendRequestBestiary();
     void sendRequestBestiaryOverview(std::string_view catName, bool search = false, std::vector<uint16_t> raceIds = {});
     void sendRequestBestiarySearch(uint16_t raceId);
@@ -256,7 +260,7 @@ private:
     void parseContainerUpdateItem(const InputMessagePtr& msg);
     void parseContainerRemoveItem(const InputMessagePtr& msg);
     void parseBosstiaryInfo(const InputMessagePtr& msg);
-    void parseTakeScreenshot(const InputMessagePtr& msg);
+    void parseClientEvent(const InputMessagePtr& msg);
     void parseCyclopediaItemDetail(const InputMessagePtr& msg);
     void parseInspectionState(const InputMessagePtr& msg);
     void parseAddInventoryItem(const InputMessagePtr& msg);
@@ -393,6 +397,14 @@ private:
     void parseWeaponProficiencyExperience(const InputMessagePtr& msg);
     void parseWeaponProficiencyInfo(const InputMessagePtr& msg);
 
+    // 15.2x
+    void parseTaskBoardData(const InputMessagePtr& msg);
+    void parseTaskBoardBountyData(const InputMessagePtr& msg);
+    void parseTaskBoardWeeklyData(const InputMessagePtr& msg);
+    void parseTaskBoardShopData(const InputMessagePtr& msg);
+    void parseMultiOfflineTrainingDialog(const InputMessagePtr& msg);
+    void parseNpcChatWindow(const InputMessagePtr& msg);
+    
     void parseHighscores(const InputMessagePtr& msg);
     void parseAttachedEffect(const InputMessagePtr& msg);
     void parseDetachEffect(const InputMessagePtr& msg);
